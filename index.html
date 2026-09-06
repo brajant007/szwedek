@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="pl" class="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>TRUCKER PRO ENTERPRISE ULTIMATE</title>
+
+  <!-- PWA & Mobile Meta -->
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#020617">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Inter', 'sans-serif'],
+            orbitron: ['Orbitron', 'sans-serif'],
+            mono: ['JetBrains Mono', 'monospace'],
+          }
+        }
+      }
+    }
+  </script>
+
+  <!-- Google Fonts & FontAwesome Icons -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&family=JetBrains+Mono:wght@400;700&family=Orbitron:wght@500;700;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+
+  <!-- Leaflet Map CSS & JS -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+  <style>
+    body {
+      background-color: #020617;
+      color: #f8fafc;
+      user-select: none;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .glass-card {
+      background: rgba(15, 23, 42, 0.75);
+      backdrop-filter: blur(12px);
+      border: 1px solid rgba(51, 65, 85, 0.5);
+    }
+    .no-scrollbar::-webkit-scrollbar { display: none; }
+    .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+  </style>
+</head>
+<body class="role-driver flex flex-col h-screen overflow-hidden font-sans">
+
+  <!-- TOP BAR: ROLE SWITCHER, VOICE & S.O.S -->
+  <header class="sticky top-0 z-50 bg-slate-950/90 backdrop-blur-md border-b border-slate-800 px-3 py-2 flex justify-between items-center gap-2">
+    <div class="flex items-center gap-2">
+      <div class="p-1.5 bg-emerald-500/10 border border-emerald-500/30 rounded-xl">
+        <i class="fa-solid fa-truck-fast text-emerald-400 text-base"></i>
+      </div>
+      <div>
+        <h1 class="font-orbitron font-black text-xs tracking-wider text-white leading-none">TRUCKER<span class="text-emerald-400">PRO</span></h1>
+        <span class="text-[9px] font-mono text-gray-400 tracking-tight">ENTERPRISE v5.0</span>
+      </div>
+    </div>
+
+    <!-- PŁYWAJĄCY PRZEŁĄCZNIK RÓL Z OCHRONĄ PIN -->
+    <div class="flex items-center bg-slate-900 p-1 rounded-xl border border-slate-800 gap-1">
+      <button id="btn-role-boss" onclick="requestRoleChange('boss')" class="px-2.5 py-1 rounded-lg text-[10px] font-orbitron font-bold text-gray-400 transition">SZEF <i class="fa-solid fa-lock text-[8px] ml-0.5"></i></button>
+      <button id="btn-role-dispatcher" onclick="requestRoleChange('dispatcher')" class="px-2.5 py-1 rounded-lg text-[10px] font-orbitron font-bold text-gray-400 transition">DYSPO <i class="fa-solid fa-lock text-[8px] ml-0.5"></i></button>
+      <button id="btn-role-driver" onclick="requestRoleChange('driver')" class="px-2.5 py-1 rounded-lg text-[10px] font-orbitron font-bold text-emerald-400 bg-slate-800 transition">KIEROWCA</button>
+    </div>
+
+    <!-- PRZYCISKI AKCJI KABINOWYCH -->
+    <div class="flex items-center gap-1.5">
+      <button onclick="startVoiceControl()" class="p-2 bg-emerald-950 border border-emerald-600 text-emerald-400 rounded-xl hover:bg-emerald-900 transition shadow-lg shadow-emerald-950/40" title="Asystent Głosowy">
+        <i class="fa-solid fa-microphone text-xs"></i>
+      </button>
+      <button onclick="triggerSosEmergency()" class="p-2 bg-red-950 border border-red-600 text-red-400 rounded-xl hover:bg-red-900 transition shadow-lg shadow-red-950/40 animate-pulse" title="S.O.S Emergency">
+        <i class="fa-solid fa-triangle-exclamation text-xs"></i>
+      </button>
+    </div>
+  </header>
+
+  <!-- MAIN VIEWPORT CONTAINER -->
+  <main class="flex-1 overflow-y-auto p-3 space-y-4 no-scrollbar pb-24" id="main-container">
+    
+    <!-- SYSTEM TOAST NOTIFICATIONS -->
+    <div id="toast-container" class="fixed top-14 right-3 left-3 z-50 pointer-events-none space-y-2"></div>
+
+    <!-- ZAKŁADKA 1: KIEROWCA & TACHO AETR -->
+    <section id="sec-driver-tasks" class="space-y-3">
+      <!-- WIDGET TACHOMETRU AETR -->
+      <div class="glass-card p-4 rounded-2xl border-emerald-500/30 space-y-3">
+        <div class="flex justify-between items-center border-b border-slate-800 pb-2">
+          <span class="text-[10px] font-orbitron text-gray-400 uppercase tracking-wider"><i class="fa-solid fa-stopwatch mr-1 text-emerald-400"></i> CYFROWY TACHOGRAF AETR</span>
+          <span id="tacho-status-badge" class="px-2 py-0.5 rounded text-[10px] font-bold font-mono bg-emerald-950 text-emerald-400 border border-emerald-800">PAUZA</span>
+        </div>
+
+        <div class="grid grid-cols-2 gap-3 text-center">
+          <div class="bg-slate-950 p-2.5 rounded-xl border border-slate-800">
+            <span class="text-[9px] text-gray-400 block font-mono">POZOSTAŁO JAZDY (4:30h)</span>
+            <span id="tacho-drive-timer" class="text-xl font-orbitron font-black text-emerald-400">04:30:00</span>
+          </div>
+          <div class="bg-slate-950 p-2.5 rounded-xl border border-slate-800">
+            <span class="text-[9px] text-gray-400 block font-mono">ODPOCZYNEK / PRZERWA</span>
+            <span id="tacho-rest-timer" class="text-xl font-orbitron font-black text-amber-400">00:45:00</span>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-3 gap-2 pt-1">
+          <button onclick="setTachoState('JAZDA')" class="py-2.5 bg-emerald-600 hover:bg-emerald-500 text-black font-orbitron font-bold text-xs rounded-xl shadow-lg transition active:scale-95">JAZDA</button>
+          <button onclick="setTachoState('PRACA')" class="py-2.5 bg-amber-600 hover:bg-amber-500 text-black font-orbitron font-bold text-xs rounded-xl shadow-lg transition active:scale-95">PRACA</button>
+          <button onclick="setTachoState('PAUZA')" class="py-2.5 bg-blue-600 hover:bg-blue-500 text-white font-orbitron font-bold text-xs rounded-xl shadow-lg transition active:scale-95">PAUZA</button>
+        </div>
+      </div>
+
+      <div id="driver-route-list" class="space-y-2"></div>
+    </section>
+
+    <!-- ZAKŁADKA 2: MAPA GPS & NAWIGACJA -->
+    <section id="sec-map" class="hidden h-full min-h-[75vh] relative rounded-2xl overflow-hidden border border-slate-800">
+      <div id="leaflet-map" class="w-full h-full min-h-[75vh] z-0"></div>
+      <div class="absolute top-3 left-3 z-10 glass-card p-2 rounded-xl text-[10px] font-mono flex items-center gap-2">
+        <i class="fa-solid fa-satellite text-emerald-400 animate-spin"></i>
+        <span>GPS ŚLEDZENIE TRASY: <b class="text-emerald-400">AKTYWNE</b></span>
+      </div>
+    </section>
+
+    <!-- ZAKŁADKA 3: CYFROWE e-CMR -->
+    <section id="sec-cmr" class="hidden space-y-3"></section>
+
+    <!-- ZAKŁADKA 4: KALKULATORY ITD & PAKIET MOBILNOŚCI -->
+    <section id="sec-calculators" class="hidden space-y-3"></section>
+
+    <!-- ZAKŁADKA 5: CENTRUM DOWODZENIA / FLOTA / S.O.S -->
+    <section id="sec-fleet" class="hidden space-y-3">
+      <div class="glass-card p-4 rounded-2xl border-slate-700 space-y-3">
+        <h2 class="font-orbitron text-xs text-purple-400 flex items-center gap-1.5">
+          <i class="fa-solid fa-truck-monster"></i> ZARZĄDZANIE FLOTĄ & RENTOWNOŚĆ
+        </h2>
+        <div id="fleet-vehicles-list" class="space-y-2"></div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- BOTTOM NAVIGATION BAR -->
+  <nav class="fixed bottom-0 left-0 right-0 z-50 bg-slate-950/95 border-t border-slate-800 px-2 py-2 backdrop-blur-md">
+    <div class="flex justify-around items-center max-w-md mx-auto">
+      <button onclick="switchTab('driver-tasks')" id="tab-driver-tasks" class="flex flex-col items-center text-emerald-400">
+        <i class="fa-solid fa-route text-base"></i>
+        <span class="text-[9px] font-orbitron mt-1 font-bold">TRASA</span>
+      </button>
+      <button onclick="switchTab('map')" id="tab-map" class="flex flex-col items-center text-gray-500 hover:text-gray-300">
+        <i class="fa-solid fa-map-location-dot text-base"></i>
+        <span class="text-[9px] font-orbitron mt-1 font-bold">MAPA</span>
+      </button>
+      <button onclick="switchTab('cmr')" id="tab-cmr" class="flex flex-col items-center text-gray-500 hover:text-gray-300">
+        <i class="fa-solid fa-file-signature text-base"></i>
+        <span class="text-[9px] font-orbitron mt-1 font-bold">e-CMR</span>
+      </button>
+      <button onclick="switchTab('calculators')" id="tab-calculators" class="flex flex-col items-center text-gray-500 hover:text-gray-300">
+        <i class="fa-solid fa-calculator text-base"></i>
+        <span class="text-[9px] font-orbitron mt-1 font-bold">ITD / ADR</span>
+      </button>
+      <button onclick="switchTab('fleet')" id="tab-fleet" class="flex flex-col items-center text-gray-500 hover:text-gray-300">
+        <i class="fa-solid fa-sliders text-base"></i>
+        <span class="text-[9px] font-orbitron mt-1 font-bold">PANEL</span>
+      </button>
+    </div>
+  </nav>
+
+  <script src="app.js"></script>
+</body>
+</html>
