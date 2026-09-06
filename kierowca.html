@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>CYBER HUD - Panel Kierowcy</title>
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#050811">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;900&family=Rajdhani:wght@600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <style>
+    body { font-family: 'Rajdhani', sans-serif; background: #050811; color: #e2e8f0; touch-action: manipulation; }
+    .font-orbitron { font-family: 'Orbitron', sans-serif; }
+    .cyber-card { background: rgba(13, 19, 33, 0.9); backdrop-filter: blur(10px); border: 1px solid rgba(0, 255, 204, 0.25); }
+  </style>
+</head>
+<body class="p-3 md:p-5 min-h-screen flex flex-col justify-between select-none">
+
+  <!-- TOP STATUS BAR -->
+  <header class="cyber-card p-3 rounded-xl mb-4 flex justify-between items-center">
+    <div class="flex items-center gap-3">
+      <a href="index.html" class="text-cyan-400 hover:text-white transition"><i class="fa-solid fa-house"></i></a>
+      <div class="w-3 h-3 rounded-full bg-emerald-400 animate-ping"></div>
+      <span class="font-orbitron text-cyan-400 font-bold tracking-wider text-sm">HGV-TERMINAL // TRASA #883</span>
+    </div>
+    <div class="flex gap-4 text-right">
+      <div>
+        <span class="block text-[10px] text-gray-400 font-mono">AURA AETR</span>
+        <span id="aura-timer" class="font-orbitron text-emerald-400 font-bold text-sm">04:15:00</span>
+      </div>
+      <div>
+        <span class="block text-[10px] text-gray-400 font-mono">OBD-II</span>
+        <button id="btn-obd" class="text-xs text-cyan-400 border border-cyan-700/50 px-2 py-0.5 rounded bg-cyan-950">CONNECT</button>
+      </div>
+    </div>
+  </header>
+
+  <!-- MAIN DRIVER HUD -->
+  <main class="grid grid-cols-1 lg:grid-cols-3 gap-4 flex-grow">
+    
+    <!-- LEFT: MAP & SPEEDOMETER -->
+    <section class="lg:col-span-2 flex flex-col gap-4">
+      <div class="cyber-card p-3 rounded-xl flex-grow flex flex-col relative overflow-hidden min-h-[300px]">
+        <div id="driver-map" class="w-full h-full rounded-lg border border-cyan-900/50"></div>
+        
+        <!-- HUD SPEED OVERLAY -->
+        <div class="absolute bottom-6 left-6 bg-black/80 backdrop-filter blur border border-cyan-500/40 p-3 rounded-xl pointer-events-none">
+          <span class="block text-[10px] text-gray-400 font-mono">PRĘDKOŚĆ REA.</span>
+          <span id="speed-display" class="font-orbitron text-3xl font-black text-cyan-400">0 <span class="text-xs text-gray-400">KM/H</span></span>
+        </div>
+      </div>
+    </section>
+
+    <!-- RIGHT: DMS AI & e-CMR SIGNATURE -->
+    <section class="flex flex-col gap-4">
+      
+      <!-- DMS AI MONITORING -->
+      <div class="cyber-card p-3 rounded-xl border-red-500/30">
+        <div class="flex justify-between items-center mb-2">
+          <span class="font-orbitron text-xs text-red-400"><i class="fa-solid fa-eye mr-1"></i> DMS AI FATIGUE</span>
+          <button id="btn-dms" class="text-[10px] bg-red-950 text-red-400 border border-red-800 px-2 py-1 rounded">START KAMERA</button>
+        </div>
+        <div class="w-full h-32 bg-black rounded-lg overflow-hidden border border-red-950 relative">
+          <video id="dms-video" autoplay muted playsinline class="w-full h-full object-cover"></video>
+        </div>
+      </div>
+
+      <!-- DIGITAL e-CMR SIGNATURE -->
+      <div class="cyber-card p-3 rounded-xl flex-grow flex flex-col justify-between border-emerald-500/30">
+        <div>
+          <div class="flex justify-between items-center mb-2">
+            <span class="font-orbitron text-xs text-emerald-400"><i class="fa-solid fa-pen-nib mr-1"></i> E-CMR PODPIS ODBIORCY</span>
+            <button id="btn-clear-sig" class="text-[10px] text-gray-400 hover:text-white">CLEAR</button>
+          </div>
+          <div class="w-full bg-black rounded-lg border border-emerald-950 overflow-hidden">
+            <canvas id="ecmr-canvas" class="w-full h-28 touch-none cursor-crosshair"></canvas>
+          </div>
+        </div>
+        
+        <button id="btn-send-ecmr" class="w-full mt-3 py-2 bg-emerald-950 hover:bg-emerald-900 text-emerald-400 font-orbitron text-xs font-bold rounded border border-emerald-700/60 transition">
+          <i class="fa-solid fa-cloud-arrow-up mr-1"></i> ZATWIERDŹ I WYŚLIJ
+        </button>
+      </div>
+
+    </section>
+  </main>
+
+  <script src="app.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      window.cyberApp.initDriverPanel();
+    });
+  </script>
+</body>
+</html>
